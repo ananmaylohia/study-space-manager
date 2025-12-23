@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import BookSpace from "./pages/BookSpace";
 import MyBookings from "./pages/MyBookings";
 import NoiseReport from "./pages/NoiseReport";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <NoiseReport />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
