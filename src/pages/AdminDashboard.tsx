@@ -1,6 +1,7 @@
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -17,13 +18,8 @@ const AdminDashboard = () => {
     return space?.space_name || 'Unknown';
   };
 
-  // Helper to get user email (since we don't have full user table, we use booking user_id as email proxy)
-  const getUserEmail = (userId: string) => {
-    // In real app, this would join with users table
-    return userId;
-  };
-
   return (
+    <Layout>
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-medium mb-1">Admin Dashboard</h1>
@@ -55,7 +51,7 @@ const AdminDashboard = () => {
                 {bookings.map(booking => (
                   <tr key={booking.booking_id} className="border-b border-border">
                     <td className="p-2 font-mono text-xs">{booking.booking_id}</td>
-                    <td className="p-2">{getUserEmail(booking.user_id)}</td>
+                    <td className="p-2">{booking.user_email}</td>
                     <td className="p-2">{getSpaceName(booking.space_id)}</td>
                     <td className="p-2">{booking.date}</td>
                     <td className="p-2">{booking.start_time}</td>
@@ -100,7 +96,7 @@ const AdminDashboard = () => {
                 {noiseReports.map(report => (
                   <tr key={report.report_id} className="border-b border-border">
                     <td className="p-2 font-mono text-xs">{report.report_id}</td>
-                    <td className="p-2">{getUserEmail(report.user_id)}</td>
+                    <td className="p-2">{report.user_email}</td>
                     <td className="p-2">{getSpaceName(report.space_id)}</td>
                     <td className="p-2 text-xs">{new Date(report.timestamp).toLocaleString()}</td>
                     <td className="p-2">{report.description}</td>
@@ -135,7 +131,7 @@ const AdminDashboard = () => {
                   .map(booking => (
                     <tr key={booking.booking_id} className="border-b border-border">
                       <td className="p-2 font-mono text-xs">{booking.booking_id}</td>
-                      <td className="p-2">{getUserEmail(booking.user_id)}</td>
+                      <td className="p-2">{booking.user_email}</td>
                       <td className="p-2">{getSpaceName(booking.space_id)}</td>
                       <td className="p-2 text-xs">
                         {booking.check_in_time 
@@ -155,6 +151,7 @@ const AdminDashboard = () => {
         )}
       </section>
     </div>
+    </Layout>
   );
 };
 
