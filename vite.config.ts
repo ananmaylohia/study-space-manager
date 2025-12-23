@@ -11,7 +11,12 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
+    // Prevent "Invalid hook call" / dispatcher null issues caused by duplicate React copies
+    dedupe: ["react", "react-dom", "react/jsx-runtime"],
     alias: {
+      // Force a single React instance in both dev and production builds
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
       "@": path.resolve(__dirname, "./src"),
     },
   },
