@@ -13,12 +13,20 @@ const Layout = ({ children }: LayoutProps) => {
     return <>{children}</>;
   }
 
-  const navLinks = [
+  const isAdmin = user?.role === 'admin';
+
+  const studentNavLinks = [
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/book', label: 'Book Space' },
     { path: '/my-bookings', label: 'My Bookings' },
     { path: '/noise-report', label: 'Report Noise' },
   ];
+
+  const adminNavLinks = [
+    { path: '/admin', label: 'Admin Dashboard' },
+  ];
+
+  const navLinks = isAdmin ? adminNavLinks : studentNavLinks;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,7 +48,7 @@ const Layout = ({ children }: LayoutProps) => {
               </Link>
             ))}
             <span className="text-sm text-muted-foreground ml-4">
-              {user?.email} ({user?.role})
+              {user?.email} {isAdmin && '(admin)'}
             </span>
             <button
               onClick={logout}
