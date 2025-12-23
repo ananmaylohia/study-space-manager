@@ -26,6 +26,7 @@ const BookSpace = () => {
 
     addBooking({
       user_id: user.id,
+      user_email: user.email,
       space_id: spaceId,
       date,
       start_time: startTime,

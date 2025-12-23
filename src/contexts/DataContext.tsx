@@ -11,6 +11,7 @@ export interface StudySpace {
 export interface Booking {
   booking_id: string;
   user_id: string;
+  user_email: string;
   space_id: string;
   date: string;
   start_time: string;
@@ -24,6 +25,7 @@ export interface NoiseReport {
   report_id: string;
   space_id: string;
   user_id: string;
+  user_email: string;
   timestamp: string;
   description: string;
 }

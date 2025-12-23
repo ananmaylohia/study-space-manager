@@ -20,6 +20,7 @@ const NoiseReport = () => {
     addNoiseReport({
       space_id: spaceId,
       user_id: user.id,
+      user_email: user.email,
       timestamp: new Date().toISOString(),
       description,
     });
