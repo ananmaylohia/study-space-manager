@@ -18,6 +18,16 @@ const AdminDashboard = () => {
     return space?.space_name || 'Unknown';
   };
 
+  // Get current bookings count per space (active bookings for today)
+  const today = new Date().toISOString().split('T')[0];
+  const getActiveBookingsForSpace = (spaceId: string) => {
+    return bookings.filter(b => 
+      b.space_id === spaceId && 
+      b.date === today && 
+      b.status === 'active'
+    ).length;
+  };
+
   return (
     <Layout>
     <div className="space-y-8">
@@ -25,6 +35,47 @@ const AdminDashboard = () => {
         <h1 className="text-xl font-medium mb-1">Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground">Monitor all bookings, noise reports, and check-in activity</p>
       </div>
+
+      {/* Study Spaces Section */}
+      <section>
+        <h2 className="text-lg font-medium mb-3 border-b border-border pb-2">Study Spaces Overview</h2>
+        {studySpaces.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No study spaces configured.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border border-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left p-2 border-b border-border font-medium">Space ID</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Space Name</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Location</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Type</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Total Capacity</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Active Bookings (Today)</th>
+                  <th className="text-left p-2 border-b border-border font-medium">Available Slots</th>
+                </tr>
+              </thead>
+              <tbody>
+                {studySpaces.map(space => {
+                  const activeBookings = getActiveBookingsForSpace(space.space_id);
+                  const availableSlots = Math.max(0, space.capacity - activeBookings);
+                  return (
+                    <tr key={space.space_id} className="border-b border-border">
+                      <td className="p-2 font-mono text-xs">{space.space_id}</td>
+                      <td className="p-2">{space.space_name}</td>
+                      <td className="p-2">{space.location}</td>
+                      <td className="p-2">{space.type}</td>
+                      <td className="p-2">{space.capacity}</td>
+                      <td className="p-2">{activeBookings}</td>
+                      <td className="p-2">{availableSlots}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* All Bookings Section */}
       <section>
