@@ -31,7 +31,6 @@ const BookSpace = () => {
       date,
       start_time: startTime,
       end_time: endTime,
-      status: 'active',
     });
 
     toast({
