@@ -1,49 +1,56 @@
 # Study Space Booking System - Backend
 
-Node.js + Express + SQLite backend.
+A simple Node.js + Express + SQLite backend for the Study Space Booking System.
 
 ## Setup
 
-```bash
-cd server
-npm install
-npm start
-```
+1. Navigate to the server folder:
+   ```bash
+   cd server
+   ```
 
-Server runs on `http://localhost:5000`.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Project Structure
+3. Start the server:
+   ```bash
+   npm start
+   ```
 
-```
-server/
-├── index.js          # Express app entry point
-├── database.js       # SQLite schema & connection
-├── seed.js           # Seed default study spaces
-├── package.json
-└── routes/
-    ├── users.js        # POST /api/login
-    ├── spaces.js       # GET /api/spaces
-    ├── bookings.js     # CRUD bookings + check-in/out
-    └── noiseReports.js # Noise report endpoints
-```
+The server will run on `http://localhost:5000`.
 
-## Tables
+## Database
 
-- **users** (id, email, password, role)
-- **study_spaces** (id, name, location, capacity, total_seats, type)
-- **bookings** (id, user_id, study_space_id, booking_date, start_time, end_time, status, check_in_time, check_out_time)
-- **noise_reports** (id, user_id, study_space_id, description, timestamp)
+SQLite database file (`study_spaces.db`) is created automatically in the server folder.
+
+### Tables
+
+- **Users** (user_id, user_name, email, role)
+- **Study_Spaces** (space_id, space_name, location, capacity, type)
+- **Bookings** (booking_id, user_id, space_id, date, start_time, end_time, status)
+- **CheckIn** (log_id, booking_id, check_in, check_out)
+- **Noise_Reports** (report_id, space_id, user_id, timestamp, description)
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/login | Login/register user |
-| GET | /api/spaces | Get all study spaces |
-| POST | /bookings | Create a booking |
-| GET | /bookings | Get all bookings (admin) |
-| GET | /bookings/user/:userId | Get user bookings |
-| PUT | /bookings/:id/checkin | Check in |
-| PUT | /bookings/:id/checkout | Check out |
-| POST | /noise-report | Submit noise report |
-| GET | /noise-reports | Get all noise reports |
+### Users
+- `POST /api/login` - Login/register user (email + role)
+
+### Study Spaces
+- `GET /api/spaces` - Get all study spaces
+
+### Bookings
+- `POST /api/bookings` - Create a booking
+- `GET /api/bookings` - Get all bookings (admin)
+- `GET /api/bookings/user/:userId` - Get user's bookings
+
+### Check-in/Check-out
+- `POST /api/checkin` - Check in to a booking
+- `POST /api/checkout` - Check out from a booking
+- `GET /api/checkins` - Get all check-in records
+
+### Noise Reports
+- `POST /api/noise` - Submit a noise report
+- `GET /api/noise` - Get all noise reports (admin)
