@@ -46,7 +46,6 @@ interface DataContextType {
   refreshSpaces: () => Promise<void>;
 }
 
-// Fallback study spaces for when backend is not available
 const fallbackStudySpaces: StudySpace[] = [
   { space_id: '1', space_name: 'Library Zone A', location: 'Main Library, 2nd Floor', capacity: 20, type: 'silent' },
   { space_id: '2', space_name: 'Group Study Room 1', location: 'Academic Block, Room 101', capacity: 8, type: 'discussion' },
@@ -62,59 +61,62 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [noiseReports, setNoiseReports] = useState<NoiseReport[]>([]);
 
-  // Fetch study spaces from backend
   const refreshSpaces = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/spaces`);
       if (response.ok) {
         const data = await response.json();
         setStudySpaces(data.map((s: any) => ({
-          ...s,
-          space_id: s.space_id.toString(),
+          space_id: s.id.toString(),
+          space_name: s.name,
+          location: s.location,
+          capacity: s.total_seats,
+          type: s.type,
         })));
       }
-    } catch (error) {
-      console.warn('Backend not available, using fallback spaces');
-    }
+    } catch { console.warn('Backend not available, using fallback spaces'); }
   };
 
-  // Fetch all bookings from backend
   const refreshBookings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings`);
+      const response = await fetch(`${API_BASE_URL}/bookings`);
       if (response.ok) {
         const data = await response.json();
         setBookings(data.map((b: any) => ({
-          ...b,
-          booking_id: b.booking_id.toString(),
+          booking_id: b.id.toString(),
           user_id: b.user_id.toString(),
-          space_id: b.space_id.toString(),
+          user_email: b.user_email,
+          space_id: b.study_space_id.toString(),
+          space_name: b.space_name,
+          date: b.booking_date,
+          start_time: b.start_time,
+          end_time: b.end_time,
+          status: b.status,
+          check_in_time: b.check_in_time,
+          check_out_time: b.check_out_time,
         })));
       }
-    } catch (error) {
-      console.warn('Backend not available for bookings');
-    }
+    } catch { console.warn('Backend not available for bookings'); }
   };
 
-  // Fetch all noise reports from backend
   const refreshNoiseReports = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/noise`);
+      const response = await fetch(`${API_BASE_URL}/noise-reports`);
       if (response.ok) {
         const data = await response.json();
         setNoiseReports(data.map((r: any) => ({
-          ...r,
-          report_id: r.report_id.toString(),
+          report_id: r.id.toString(),
           user_id: r.user_id.toString(),
-          space_id: r.space_id.toString(),
+          space_id: r.study_space_id.toString(),
+          space_name: r.space_name,
+          user_email: r.user_email,
+          timestamp: r.timestamp,
+          description: r.description,
         })));
       }
-    } catch (error) {
-      console.warn('Backend not available for noise reports');
-    }
+    } catch { console.warn('Backend not available for noise reports'); }
   };
 
-  // Initial data fetch
   useEffect(() => {
     refreshSpaces();
     refreshBookings();
@@ -123,137 +125,88 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const addBooking = async (booking: Omit<Booking, 'booking_id' | 'status'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+      const response = await fetch(`${API_BASE_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: parseInt(booking.user_id),
-          space_id: parseInt(booking.space_id),
-          date: booking.date,
+          study_space_id: parseInt(booking.space_id),
+          booking_date: booking.date,
           start_time: booking.start_time,
           end_time: booking.end_time,
         }),
       });
-      
-      if (response.ok) {
-        await refreshBookings();
-      } else {
-        throw new Error('Failed to create booking');
-      }
-    } catch (error) {
-      // Fallback to local state
+      if (response.ok) await refreshBookings();
+      else throw new Error('Failed to create booking');
+    } catch {
       console.warn('Backend not available, using local booking');
-      const newBooking: Booking = {
+      setBookings(prev => [...prev, {
         ...booking,
         booking_id: Math.random().toString(36).substr(2, 9),
-        status: 'active',
-      };
-      setBookings(prev => [...prev, newBooking]);
+        status: 'active' as const,
+      }]);
     }
   };
 
   const checkIn = async (bookingId: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/checkin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: parseInt(bookingId) }),
-      });
-      
+      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/checkin`, { method: 'PUT' });
       if (response.ok) {
-        setBookings(prev =>
-          prev.map(b =>
-            b.booking_id === bookingId
-              ? { ...b, check_in_time: new Date().toISOString() }
-              : b
-          )
-        );
+        setBookings(prev => prev.map(b =>
+          b.booking_id === bookingId ? { ...b, check_in_time: new Date().toISOString() } : b
+        ));
       }
-    } catch (error) {
-      // Fallback to local state
-      setBookings(prev =>
-        prev.map(b =>
-          b.booking_id === bookingId
-            ? { ...b, check_in_time: new Date().toISOString() }
-            : b
-        )
-      );
+    } catch {
+      setBookings(prev => prev.map(b =>
+        b.booking_id === bookingId ? { ...b, check_in_time: new Date().toISOString() } : b
+      ));
     }
   };
 
   const checkOut = async (bookingId: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: parseInt(bookingId) }),
-      });
-      
+      const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/checkout`, { method: 'PUT' });
       if (response.ok) {
-        setBookings(prev =>
-          prev.map(b =>
-            b.booking_id === bookingId
-              ? { ...b, check_out_time: new Date().toISOString(), status: 'completed' as const }
-              : b
-          )
-        );
+        setBookings(prev => prev.map(b =>
+          b.booking_id === bookingId ? { ...b, check_out_time: new Date().toISOString(), status: 'completed' as const } : b
+        ));
       }
-    } catch (error) {
-      // Fallback to local state
-      setBookings(prev =>
-        prev.map(b =>
-          b.booking_id === bookingId
-            ? { ...b, check_out_time: new Date().toISOString(), status: 'completed' as const }
-            : b
-        )
-      );
+    } catch {
+      setBookings(prev => prev.map(b =>
+        b.booking_id === bookingId ? { ...b, check_out_time: new Date().toISOString(), status: 'completed' as const } : b
+      ));
     }
   };
 
   const addNoiseReport = async (report: Omit<NoiseReport, 'report_id' | 'timestamp'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/noise`, {
+      const response = await fetch(`${API_BASE_URL}/noise-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          space_id: parseInt(report.space_id),
           user_id: parseInt(report.user_id),
+          study_space_id: parseInt(report.space_id),
           description: report.description,
         }),
       });
-      
-      if (response.ok) {
-        await refreshNoiseReports();
-      } else {
-        throw new Error('Failed to create noise report');
-      }
-    } catch (error) {
-      // Fallback to local state
+      if (response.ok) await refreshNoiseReports();
+      else throw new Error('Failed to create noise report');
+    } catch {
       console.warn('Backend not available, using local noise report');
-      const newReport: NoiseReport = {
+      setNoiseReports(prev => [...prev, {
         ...report,
         report_id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toISOString(),
-      };
-      setNoiseReports(prev => [...prev, newReport]);
+      }]);
     }
   };
 
   return (
-    <DataContext.Provider
-      value={{
-        studySpaces,
-        bookings,
-        noiseReports,
-        addBooking,
-        checkIn,
-        checkOut,
-        addNoiseReport,
-        refreshBookings,
-        refreshNoiseReports,
-        refreshSpaces,
-      }}
-    >
+    <DataContext.Provider value={{
+      studySpaces, bookings, noiseReports,
+      addBooking, checkIn, checkOut, addNoiseReport,
+      refreshBookings, refreshNoiseReports, refreshSpaces,
+    }}>
       {children}
     </DataContext.Provider>
   );
@@ -261,8 +214,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
 export const useData = () => {
   const context = useContext(DataContext);
-  if (context === undefined) {
-    throw new Error('useData must be used within a DataProvider');
-  }
+  if (context === undefined) throw new Error('useData must be used within a DataProvider');
   return context;
 };

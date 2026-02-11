@@ -28,45 +28,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, role }),
       });
-      
+
       if (response.ok) {
         const dbUser = await response.json();
-        const newUser: User = {
-          id: dbUser.user_id.toString(),
-          user_id: dbUser.user_id,
+        setUser({
+          id: dbUser.id.toString(),
+          user_id: dbUser.id,
           email: dbUser.email,
-          name: dbUser.user_name,
+          name: dbUser.email.split('@')[0],
           role: dbUser.role,
-        };
-        setUser(newUser);
+        });
       } else {
-        // Fallback to local user if backend is not available
-        const newUser: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          user_id: 0,
-          email,
-          name: email.split('@')[0],
-          role,
-        };
-        setUser(newUser);
+        throw new Error('Login failed');
       }
     } catch (error) {
-      // Fallback to local user if backend is not running
       console.warn('Backend not available, using local user');
-      const newUser: User = {
+      setUser({
         id: Math.random().toString(36).substr(2, 9),
         user_id: 0,
         email,
         name: email.split('@')[0],
         role,
-      };
-      setUser(newUser);
+      });
     }
   };
 
-  const logout = () => {
-    setUser(null);
-  };
+  const logout = () => setUser(null);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
@@ -77,8 +64,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
