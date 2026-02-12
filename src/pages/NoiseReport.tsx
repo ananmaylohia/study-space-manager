@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MapPin, AlertTriangle, Send, Volume2 } from 'lucide-react';
 
 const NoiseReport = () => {
-  const { studySpaces, addNoiseReport } = useData();
+  const { studySpaces, bookings, addNoiseReport } = useData();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -93,11 +93,15 @@ const NoiseReport = () => {
                   required
                 >
                   <option value="">Select the affected space</option>
-                  {studySpaces.map(space => (
-                    <option key={space.space_id} value={space.space_id}>
-                      {space.space_name} - {space.location}
-                    </option>
-                  ))}
+                  {studySpaces
+                    .filter(space => 
+                      user && bookings.some(b => b.user_id === user.id && b.space_id === space.space_id && b.status === 'active')
+                    )
+                    .map(space => (
+                      <option key={space.space_id} value={space.space_id}>
+                        {space.space_name} - {space.location}
+                      </option>
+                    ))}
                 </select>
               </div>
             </motion.div>
