@@ -10,7 +10,7 @@ import { MapPin, Calendar, Clock, ArrowRight, BookOpen } from 'lucide-react';
 const BookSpace = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { studySpaces, addBooking } = useData();
+  const { studySpaces, bookings, addBooking } = useData();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -23,12 +23,31 @@ const BookSpace = () => {
 
   const selectedSpace = studySpaces.find(s => s.space_id === spaceId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user) return;
 
-    addBooking({
+    // Check for overlapping bookings for the same user
+    const hasOverlap = bookings.some(b =>
+      b.user_id === user.id &&
+      b.space_id === spaceId &&
+      b.date === date &&
+      b.status === 'active' &&
+      startTime < b.end_time &&
+      endTime > b.start_time
+    );
+
+    if (hasOverlap) {
+      toast({
+        title: 'Booking Conflict',
+        description: 'You already have a booking for this space during the selected time.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await addBooking({
       user_id: user.id,
       user_email: user.email,
       space_id: spaceId,
